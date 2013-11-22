@@ -7,6 +7,7 @@ Created on Mon Nov 18 15:17:01 2013
 
 import urllib
 import datetime
+import matplotlib.pyplot as plt
 
 class SDate:
     
@@ -38,6 +39,8 @@ class SDate:
 snumber = '2314'
 SPdatalist = []
 templist = []
+spdate = []
+sph = []
 SDatelist = SDate()
 SDatelist.ymdatelist()
          
@@ -60,7 +63,49 @@ for sp in templist: #Transform temp list data into SPdatalist
         start = sp.find('\"')
     SPdatalist.append(sp)
 
-print SPdatalist
+print "part1 complete!"
 
-sp = SPdatalist[0]
-temp = [idx for (idx, s) in enumerate(sp) if s == ',']
+for i in range(len(SPdatalist)-1):  #graph 
+    sp = SPdatalist[i]
+    temp = [idx for (idx, s) in enumerate(sp) if s == ',']
+    tempsph =[]   
+    if spdate == []:   #initial first day
+        for x in range(4):
+            tempsph.append(sp[temp[x + 2]+1:temp[x + 3]])
+        spdate.append(sp[:temp[0]])    #record date
+        sph.append(max(tempsph))
+    else:
+        for x in range(4):
+            tempsph.append(sp[temp[x + 2]+1:temp[x + 3]])        
+        if max(tempsph) > linepoint_high and min(tempsph) < linepoint_low:
+            spdate.append(sp[:temp[0]]) #record date
+            spdate.append(sp[:temp[0]])            
+            if sp[temp[6]+1] == "-":    #decide the direction
+                sph.append(max(tempsph))
+                sph.append(min(tempsph))
+            else:
+                sph.append(min(tempsph))
+                sph.append(max(tempsph))
+        else:
+            if max(tempsph) > linepoint_high:
+                sph.append(max(tempsph))
+                spdate.append(sp[:temp[0]])
+            else:
+                if min(tempsph) < linepoint_low:
+                    sph.append(min(tempsph))
+                    spdate.append(sp[:temp[0]])
+    linepoint_high = max(tempsph)
+    linepoint_low = min(tempsph)
+
+print "part2a complete!"
+
+spdatex =[]            
+for i in range(len(spdate)):
+    spdatex.append(i)
+print len(spdatex)
+
+plt.plot(spdatex,sph)
+plt.xlim(1,len(spdatex))
+plt.ylim(1,max(sph))
+plt.show()
+print "part3 complete!"
