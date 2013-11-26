@@ -6,7 +6,7 @@ Created on Mon Nov 18 15:17:01 2013
 """
 
 import urllib
-import datetime
+import datetime, time
 import matplotlib.pyplot as plt
 
 class SDate:
@@ -16,7 +16,7 @@ class SDate:
         self.nowyear = int(datetime.datetime.now().strftime('%Y'))
         self.nowmonth = int(datetime.datetime.now().strftime('%m'))
         
-    def ymdatelist(self): #get year & month value
+    def ymdatelist(self): #get all year & month value
 
         for x in range(1993,self.nowyear+1): #create all year and month
             if x != self.nowyear:
@@ -35,7 +35,13 @@ class SDate:
                         spdate = str(x) + str(y)
                         '''print spdate''' #verify date
                     self.SD.append(spdate)
-                    
+    
+    def now(self):
+        if self.nowmonth >= 10:
+            return str(self.nowyear) + str(self.nowmonth)
+        else:
+            return str(self.nowyear) + '0' + str(self.nowmonth)
+                     
 snumber = '2314'
 SPdatalist = []
 templist = []
@@ -43,14 +49,15 @@ spdate = []
 sph = []
 SDatelist = SDate()
 SDatelist.ymdatelist()
-         
+       
 for sddate in SDatelist.SD: #store url data into temp list
     url = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAY_print.php?genpage=genpage/Report' \
     + sddate + '/' + sddate +'_F3_1_8_' + snumber + '.php&type=csv'  
-    response = urllib.urlopen(url)  #open url
-    html = response.read()  #read url data
-    sp = html.splitlines()  #split data into list
-    response.close()        #close url
+    #response = urllib.urlopen(url)  #open url
+    #html = response.read()  #read url data
+    #sp = html.splitlines()  #split data into list
+    sp = urllib.urlopen(url).read().splitlines() #rewrite above code
+    #response.close()        #close url
     del sp[0:2]
     if sp != []:
         templist.extend(sp) #Merge list
@@ -76,7 +83,7 @@ for i in range(len(SPdatalist)-1):  #graph
         sph.append(max(tempsph))
     else:
         for x in range(4):
-            tempsph.append(sp[temp[x + 2]+1:temp[x + 3]])        
+            tempsph.append(sp[temp[x + 2]+1:temp[x + 3]])      #graph rule  
         if max(tempsph) > linepoint_high and min(tempsph) < linepoint_low:
             spdate.append(sp[:temp[0]]) #record date
             spdate.append(sp[:temp[0]])            
@@ -102,7 +109,6 @@ print "part2a complete!"
 spdatex =[]            
 for i in range(len(spdate)):
     spdatex.append(i)
-print len(spdatex)
 
 plt.plot(spdatex,sph)
 plt.xlim(1,len(spdatex))
