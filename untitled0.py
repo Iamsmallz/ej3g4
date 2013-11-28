@@ -6,7 +6,7 @@ Created on Mon Nov 18 15:17:01 2013
 """
 
 import urllib
-import datetime, time
+import datetime
 import matplotlib.pyplot as plt
 
 class SDate:
@@ -37,11 +37,14 @@ class SDate:
                     self.SD.append(spdate)
     
     def now(self):
+        
         if self.nowmonth >= 10:
             return str(self.nowyear) + str(self.nowmonth)
         else:
             return str(self.nowyear) + '0' + str(self.nowmonth)
                      
+
+
 snumber = '2314'
 SPdatalist = []
 templist = []
@@ -49,26 +52,91 @@ spdate = []
 sph = []
 SDatelist = SDate()
 SDatelist.ymdatelist()
-       
-for sddate in SDatelist.SD: #store url data into temp list
-    url = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAY_print.php?genpage=genpage/Report' \
-    + sddate + '/' + sddate +'_F3_1_8_' + snumber + '.php&type=csv'  
-    #response = urllib.urlopen(url)  #open url
-    #html = response.read()  #read url data
-    #sp = html.splitlines()  #split data into list
-    sp = urllib.urlopen(url).read().splitlines() #rewrite above code
-    #response.close()        #close url
-    del sp[0:2]
-    if sp != []:
-        templist.extend(sp) #Merge list
 
-for sp in templist: #Transform temp list data into SPdatalist
-    start = sp.find('\"')
-    while start != -1:
-        end = sp.find('\"',start+1)
-        sp = sp[:start] + sp[start+1:end].replace(",","") + sp[end+1:]
-        start = sp.find('\"')
-    SPdatalist.append(sp)
+if os.path.exists('s_' + snumber +'.txt'):    #open old file
+    file = open('s_' + snumber +'.txt')
+    line = file.readline()
+    while len(line) != 0:
+        SPdatalist.append(line)
+        line = file.readline() #next line
+    file.close()
+    PastPricemark = SPdatalist[len(SPdatalist)-1] #get the last one item
+else:
+    PastPricemark = ' 82/01/04,0,0,0,0,0,0,0,0'
+    
+s = PastPricemark[:PastPricemark.find(',')].find('/')   #get the date in the last one item
+PastPricemarkDate = str(int(PastPricemark[:s])+1911) + PastPricemark[s+1:s+3]
+
+if PastPricemarkDate == SDatelist.now():
+    url = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAY_print.php?genpage=genpage/Report' \
+    + SDatelist.now() + '/' + SDatelist.now() +'_F3_1_8_' + snumber + '.php&type=csv'
+    templist = urllib.urlopen(url).read().splitlines()
+    
+    for z in range(len(templist)):
+        if templist[z].find('\xbc\xc6') > 0:
+            break
+    del templist[0:z+1]
+    
+    for i in range(len(templist)):
+        p = templist[i]
+        if p[:templist[i].find(',')] == PastPricemark[:PastPricemark.find(',')]:
+            break
+    p = templist[i+1:]
+    if p != []:
+        for sp in p:
+            start = sp.find('\"')
+            while start != -1:
+                end = sp.find('\"',start+1)
+                sp = sp[:start] + sp[start+1:end].replace(",","") + sp[end+1:]
+                start = sp.find('\"')
+            SPdatalist.append(sp+'\n')       
+else:
+    for i in range(len(SDatelist.SD)):
+        if (str(int(PastPricemark[:s])+1911) + PastPricemark[s+1:s+3]) == SDatelist.SD[i]:
+            break
+        
+    for x in SDatelist.SD[i:]:
+        
+        url = 'http://www.twse.com.tw/ch/trading/exchange/STOCK_DAY/STOCK_DAY_print.php?genpage=genpage/Report' \
+        + x + '/' + x +'_F3_1_8_' + snumber + '.php&type=csv'
+        templist = urllib.urlopen(url).read().splitlines()
+        
+        for z in range(len(templist)):
+            if templist[z].find('\xbc\xc6') > 0:
+                break
+        del templist[0:z+1]
+        
+        if PastPricemarkDate == x:
+            for y in range(len(templist)):
+                p = templist[y]
+                if p[:templist[y].find(',')] == PastPricemark[:PastPricemark.find(',')]:
+                    break
+            p = templist[y+1:]
+            if p != []:
+                for sp in p:
+                    start = sp.find('\"')
+                    while start != -1:
+                        end = sp.find('\"',start+1)
+                        sp = sp[:start] + sp[start+1:end].replace(",","") + sp[end+1:]
+                        start = sp.find('\"')
+                    SPdatalist.append(sp+'\n')                
+        else:
+            for sp in templist:
+                start = sp.find('\"')
+                while start != -1:
+                    end = sp.find('\"',start+1)
+                    sp = sp[:start] + sp[start+1:end].replace(",","") + sp[end+1:]
+                    start = sp.find('\"')
+                SPdatalist.append(sp+'\n')
+              
+if os.path.exists('s_' + snumber +'.txt'):
+    os.remove('s_' + snumber +'.txt')
+
+file = open('s_' + snumber +'.txt', 'w')
+for i in range(len(SPdatalist)):
+    line = str(SPdatalist[i])
+    file.write(line)
+file.close()        
 
 print "part1 complete!"
 
